@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { Appbar, Button, FAB, Colors } from 'react-native-paper';
+import { Appbar, FAB, Colors } from 'react-native-paper';
 import { FlatList, StyleSheet } from 'react-native';
 
 export const TaskList = () => {
