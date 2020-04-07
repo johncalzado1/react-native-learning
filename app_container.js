@@ -8,18 +8,21 @@ const testUserValue = 'test';
 export const AppContainer = () => {
   const ref = firestore().collection('tasks');
   const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    ref.where('user', '==', 'test')
+    ref.where('user', '==', testUserValue.toString())
       .onSnapshot((querySnapshot) => {
         const list = [];
         querySnapshot.forEach(doc => {
-          const { title, complete } = doc.data();
+          const { title, start, end, complete, category } = doc.data();
           list.push({
             id: doc.id,
             title,
             complete,
+            start,
+            end,
+            category
           });
         });
 
@@ -31,5 +34,5 @@ export const AppContainer = () => {
       });
   }, [])
 
-  return <TaskList />;
+  return <TaskList isLoading={loading} />;
 };
