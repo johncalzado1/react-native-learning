@@ -1,38 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import 'react-native-gesture-handler';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { Colors } from 'react-native-paper'
 
-import { TaskList } from './components/task_list';
+import { screen_configs } from './screen_configs.js'
 
-const testUserValue = 'test';
+import { TaskListScreen, AddTaskScreen } from './screens'
 
+const Stack = createStackNavigator();
 export const AppContainer = () => {
-  const ref = firestore().collection('tasks');
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name={screen_configs.TaskListScreen.name}
+          component={TaskListScreen}
+          options={{
+            title: screen_configs.TaskListScreen.title,
+            ...defaultStyle
+          }}
+        />
+        <Stack.Screen
+          name={screen_configs.AddTaskScreen.name}
+          component={AddTaskScreen}
+          options={{
+            title: screen_configs.AddTaskScreen.title,
+            ...defaultStyle
+          }}
+        />
 
-  useEffect(() => {
-    ref.where('user', '==', testUserValue.toString())
-      .onSnapshot((querySnapshot) => {
-        const list = [];
-        querySnapshot.forEach(doc => {
-          const { title, start, end, complete, category } = doc.data();
-          list.push({
-            id: doc.id,
-            title,
-            complete,
-            start,
-            end,
-            category
-          });
-        });
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
 
-        setTasks(list);
-
-        if (loading) {
-          setLoading(false);
-        }
-      });
-  }, [])
-
-  return <TaskList isLoading={loading} />;
-};
+const defaultStyle = {
+  headerStyle: {
+    backgroundColor: Colors.blue500,
+  },
+  headerTintColor: Colors.white
+}
