@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import firestore from '@react-native-firebase/firestore';
 import { FAB, Colors } from 'react-native-paper';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { TaskList } from '../components/task_list'
 import { screen_configs } from '../screen_configs';

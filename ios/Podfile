@@ -43,6 +43,8 @@ target 'reactnativelearning' do
 
   pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
 
+  pod 'RNDateTimePicker', :path => '../node_modules/@react-native-community/datetimepicker'
+
   target 'reactnativelearningTests' do
     inherit! :search_paths
     # Pods for testing

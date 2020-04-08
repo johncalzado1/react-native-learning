@@ -11,6 +11,7 @@
     "prepare": "patch-package"
   },
   "dependencies": {
+    "@react-native-community/datetimepicker": "^2.3.1",
     "@react-native-community/masked-view": "^0.1.7",
     "@react-native-firebase/app": "^6.4.0",
     "@react-native-firebase/database": "^6.4.0",
