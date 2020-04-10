@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
-import { Text, Portal, Divider, Title, Button } from 'react-native-paper'
+import React, { useState, useEffect } from 'react';
+import { Text, Portal, Divider, Title, Button, Caption, TextInput, IconButton } from 'react-native-paper'
 import { View, ScrollView, StyleSheet, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker'
+import firestore from '@react-native-firebase/firestore';
+import moment from 'moment';
+import { TimeInputControl } from '../theme'
+
+const styles = StyleSheet.create({
+    button: {
+        margin: 5
+    },
+    buttonContainer: {
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap"
+    }
+});
 
 export const AddTaskScreen = () => {
     return (
@@ -15,15 +28,32 @@ export const AddTaskScreen = () => {
 }
 
 const CategorySection = () => {
-    const options = [
-        { name: 'Free Time' },
-        { name: 'Work' },
-        { name: 'Projects' },
-        { name: 'Food' },
-        { name: 'Shower' }
-    ]
+    const [taskTypes, setTaskTypes] = useState([])
+    const [loading, setLoading] = useState(true);
+    const ref = firestore().collection('task_type');
+
+    useEffect(() => {
+        return ref.onSnapshot((querySnapshot) => {
+            const list = [];
+            querySnapshot.forEach(doc => {
+                const { name, title } = doc.data();
+                list.push({
+                    id: doc.id,
+                    title,
+                    name,
+                });
+            });
+
+            setTaskTypes(list);
+
+            if (loading) {
+                setLoading(false);
+            }
+        });
+    }, [])
+
     const renderOptions = () => {
-        return options.map((option, i) => {
+        return taskTypes.map((option, i) => {
             return (
                 <Button
                     key={i}
@@ -31,62 +61,32 @@ const CategorySection = () => {
                     compact
                     uppercase={false}
                     style={styles.button}>
-                    {option.name}
+                    {option.title}
                 </Button>
             )
         })
     }
     return (
-        <>
+        <View>
             <Title>Task</Title>
             <View style={styles.buttonContainer}>
                 {renderOptions()}
             </View>
-        </>
+        </View >
     )
 }
 
 const TimeSection = () => {
-    const [date, setDate] = useState(new Date());
-    const [show, setShow] = useState(false);
-
-    const onChange = (event, selectedDate) => {
-        const currentDate = selectedDate || date;
-        setShow(Platform.OS === 'ios');
-        setDate(currentDate);
-    };
-
-    const showTimepicker = () => {
-        setShow(true)
-    };
+    const [start, toggleStart] = useState(moment().toDate())
+    const [end, toggleEnd] = useState('')
 
     return (
         <View>
-            <View>
-                <Button onPress={showTimepicker}>Show time picker!</Button>
-            </View>
-            {show && (
-                <DateTimePicker
-                    testID="dateTimePicker"
-                    timeZoneOffsetInMinutes={0}
-                    value={date}
-                    mode="time"
-                    is24Hour={true}
-                    display="default"
-                    onChange={onChange}
-                />
-            )}
+            <Title>Time</Title>
+            <Caption>start</Caption>
+            <TimeInputControl datetime={start} toggleDateTime={toggleStart} />
+            <Caption>end</Caption>
+            <TimeInputControl datetime={end} toggleDateTime={toggleEnd} />
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    button: {
-        margin: 5
-    },
-    buttonContainer: {
-        display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap"
-    }
-});
