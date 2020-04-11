@@ -7,13 +7,7 @@ import { Colors, DefaultTheme, Provider as PaperProvider } from 'react-native-pa
 import { screen_configs } from './screen_configs.js';
 import { TaskListScreen, AddTaskScreen } from './screens';
 
-const theme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: Colors.blue500
-  },
-};
+import { theme_file as theme } from './theme_file'
 
 const Stack = createStackNavigator();
 export const AppContainer = () => {

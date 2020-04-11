@@ -3,16 +3,23 @@ import { TextInput, IconButton, Button } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FlexItem, FlexContainer, Gutter } from '../index';
 import moment from 'moment'
+import { StyleSheet } from 'react-native';
+import { theme_file } from '../../theme_file'
+
+const styles = StyleSheet.create({
+    item: {
+        marginRight: 10,
+        marginBottom: 10
+    }
+});
 
 export const TimeInputControl = ({
     datetime,
     toggleDateTime,
-    minWidth = 150,
+    minWidth = 100,
     showCommonTimes = false,
     showIncrementDecrement = true
 }) => {
-
-    if (!datetime || datetime == '') datetime = new Date()
 
     const [show, setShow] = useState(false);
 
@@ -24,28 +31,38 @@ export const TimeInputControl = ({
 
     return (
         <>
-            <FlexContainer direction="row" alignItems="center">
+            <FlexContainer direction="row" alignItems="center" wrap="wrap">
                 <FlexItem>
                     <TextInput
-                        value={datetime.toLocaleTimeString()}
+                        disabled
+                        value={(datetime instanceof Date) ? moment(datetime).format("HH:mm") : ''}
                         dense
-                        style={{ minWidth: minWidth }} />
+                        style={{ ...styles.item, minWidth: minWidth }} />
                 </FlexItem>
-                <FlexItem margin={{ marginLeft: 5, marginRight: 5 }}>
-                    <Button icon="pencil" onPress={() => setShow(true)} compact mode="contained"></Button>
+                <FlexItem>
+                    <IconButton
+                        icon="pencil"
+                        style={styles.item}
+                        onPress={() => setShow(true)}></IconButton>
                 </FlexItem>
-                {showCommonTimes && (
-                    <CommonTimes />
-                )}
                 {showIncrementDecrement && (
-                    <IncrementDecrement />
+                    <IncrementDecrement toggleTime={toggleDateTime} datetime={datetime} />
                 )}
+                {showCommonTimes && (
+                    <CommonTimes toggleDateTime={toggleDateTime} />
+                )}
+                <FlexItem>
+                    <IconButton
+                        icon="close"
+                        style={styles.item}
+                        onPress={() => toggleDateTime(undefined)}></IconButton>
+                </FlexItem>
             </FlexContainer>
             {show && (
                 <DateTimePicker
                     testID="dateTimePicker"
                     timeZoneOffsetInMinutes={0}
-                    value={datetime}
+                    value={(datetime instanceof Date) ? datetime : new Date()}
                     mode="time"
                     is24Hour={true}
                     display="default"
@@ -57,42 +74,52 @@ export const TimeInputControl = ({
     )
 }
 
-const IncrementDecrement = ({ toggleTime }) => {
+const IncrementDecrement = ({ datetime, toggleTime }) => {
+    const _datetime = (datetime instanceof Date) ? datetime : new Date()
     return (
-        <FlexContainer direction="row">
-            <FlexItem grow={false} margin={{ marginLeft: 5, marginRight: 5 }}>
-                <Button icon="plus" uppercase={false} mode="contained" compact>5m</Button>
+        <>
+            <FlexItem grow={false}>
+                <IconButton
+                    icon="plus"
+                    style={styles.item}
+                    onPress={() => toggleTime(moment(_datetime).add(1, "minute").toDate())}></IconButton>
             </FlexItem>
-            <FlexItem grow={false} margin={{ marginLeft: 5, marginRight: 5 }}>
-                <Button icon="minus" uppercase={false} mode="contained" compact>5m</Button>
+            <FlexItem grow={false}>
+                <IconButton
+                    icon="minus"
+                    style={styles.item}
+                    onPress={() => toggleTime(moment(_datetime).subtract(1, "minute").toDate())}></IconButton>
             </FlexItem>
-        </FlexContainer>
+        </>
     )
 }
 
-const CommonTimes = () => {
+const CommonTimes = ({ toggleDateTime }) => {
     const commonTimes = [
         {
             name: "now",
-            title: "now"
-        },
-        {
-            name: "now-5m",
-            title: "now-5m",
+            title: "now",
+            action: (toggleDateTime) => {
+                toggleDateTime(new Date())
+            }
         }
     ]
     const commonTimesRender = commonTimes.map((item, index) => {
         return (
             <FlexItem key={index} grow={false}>
-                <Gutter>
-                    <Button uppercase={false} mode="contained" compact>{item.title}</Button>
-                </Gutter>
+                <Button
+                    uppercase={false}
+                    mode="text"
+                    compact
+                    style={styles.item}
+                    color={theme_file.colors.text}
+                    onPress={() => item.action(toggleDateTime)}>{item.title}</Button>
             </FlexItem>
         )
     })
     return (
-        <FlexContainer direction="row" wrap="wrap">
+        <>
             {commonTimesRender}
-        </FlexContainer>
+        </>
     )
 }

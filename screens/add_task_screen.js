@@ -4,10 +4,12 @@ import { View, ScrollView, StyleSheet, Platform } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import moment from 'moment';
 import { TimeInputControl } from '../theme'
+import { theme_file } from '../theme_file';
 
 const styles = StyleSheet.create({
     button: {
-        margin: 5
+        marginRight: 10,
+        marginBottom: 10
     },
     buttonContainer: {
         display: "flex",
@@ -59,6 +61,7 @@ const CategorySection = () => {
                     key={i}
                     mode="outlined"
                     compact
+                    color={theme_file.colors.text}
                     uppercase={false}
                     style={styles.button}>
                     {option.title}
@@ -77,16 +80,16 @@ const CategorySection = () => {
 }
 
 const TimeSection = () => {
-    const [start, toggleStart] = useState(moment().toDate())
+    const [start, toggleStart] = useState(new Date())
     const [end, toggleEnd] = useState('')
 
     return (
         <View>
             <Title>Time</Title>
             <Caption>start</Caption>
-            <TimeInputControl datetime={start} toggleDateTime={toggleStart} />
+            <TimeInputControl datetime={start} toggleDateTime={toggleStart} showCommonTimes />
             <Caption>end</Caption>
-            <TimeInputControl datetime={end} toggleDateTime={toggleEnd} />
+            <TimeInputControl datetime={end} toggleDateTime={toggleEnd} showCommonTimes />
         </View>
     );
 }
