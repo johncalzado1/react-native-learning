@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Portal, Title, Button, Caption, Dialog, Text, Subheading } from 'react-native-paper'
 import { View, ScrollView, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
-import { TimeInputControl } from '../theme'
+import { TimeInputControl, FlexContainer } from '../theme'
 import { theme_file } from '../theme_file';
 
 const styles = StyleSheet.create({
@@ -115,10 +115,11 @@ const CategorySection = () => {
     const renderSubOptions = () => {
         if (!task || task === '') return (<></>)
         const taskObj = taskTypes.find(taskObj => taskObj.name === task)
-        console.log(taskObj)
         if ('subtasks' in taskObj) {
-            if (taskObj['subtasks'].length < 1) return (<Text>No Sub Tasks</Text>)
             const subTasks = taskObj['subtasks'];
+
+            if (subTasks.length < 1 || Object.keys(subTasks).length === 0) return (<Text>No Sub Tasks</Text>)
+
             return subTasks.map((option, i) => {
                 return (
                     <Button
@@ -142,7 +143,9 @@ const CategorySection = () => {
 
     const getSubTaskTitle = () => {
         const taskObj = taskTypes.find(taskObj => taskObj.name === task)
-        const subTaskObj = taskObj['subtasks'].find(subTaskObj => subTaskObj.name === subTask)
+        const subTasks = taskObj['subtasks'];
+        if (Object.keys(subTasks).length === 0 || subTasks.length < 1) return "n/a"
+        const subTaskObj = subTasks.find(subTaskObj => subTaskObj.name === subTask)
         return subTaskObj.title
     }
     return (
@@ -152,14 +155,22 @@ const CategorySection = () => {
                 {renderOptions()}
             </View>
             {(subTask !== '' && subTask !== undefined) && (
-                <Subheading>Sub Task: {getSubTaskTitle()}</Subheading>
+                <FlexContainer direction="row" alignItems="center">
+                    <Subheading>Sub Task: </Subheading>
+                    <Button mode="contained" uppercase={false} compact>{getSubTaskTitle()}</Button>
+                </FlexContainer>
             )}
             <Portal>
                 <Dialog visible={showSubTaskModal} onDismiss={() => toggleShowSubTaskModal(false)}>
                     <Dialog.Title>Choose a sub task</Dialog.Title>
-                    <Dialog.Content style={styles.buttonContainer}>
-                        {renderSubOptions()}
-                    </Dialog.Content>
+                    <Dialog.ScrollArea>
+                        <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10 }}>
+                            {renderSubOptions()}
+                        </ScrollView>
+                    </Dialog.ScrollArea>
+                    <Dialog.Actions>
+                        <Button onPress={() => toggleShowSubTaskModal(false)}>Ok</Button>
+                    </Dialog.Actions>
                 </Dialog>
             </Portal>
         </View >
