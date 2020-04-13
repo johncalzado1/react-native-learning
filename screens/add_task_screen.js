@@ -4,6 +4,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import { TimeInputControl, FlexContainer } from '../theme'
 import { theme_file } from '../theme_file';
+import { RnFirebaseMultiSelectList } from '../components/rnfirebase_list/rnfirebase_list';
 
 const styles = StyleSheet.create({
     button: {
@@ -27,47 +28,30 @@ export const AddTaskScreen = () => {
 }
 
 const CategorySection = () => {
+
+    // Form values
     const [task, toggleTask] = useState(undefined);
     const [subTask, toggleSubTask] = useState(undefined);
+    const [extraFieldValues, toggleExtraFieldValues] = useState({})
+
     const [taskTypes, setTaskTypes] = useState([])
     const [loading, setLoading] = useState(true);
 
     const [showSubTaskModal, toggleShowSubTaskModal] = useState(false)
     const ref = firestore().collection('task_type');
 
-    const toggleButtonTask = (taskName) => {
-
-        // if the task is already selected, then toggle it off
-        if (task === taskName) {
-            toggleTask('');
-            toggleSubTask('')
-        } else {
-            toggleTask(taskName)
-            toggleSubTask('')
-            toggleShowSubTaskModal(true)
-        }
-    }
-
-    const toggleButtonSubTask = (taskName) => {
-
-        // if the task is already selected, then toggle it off
-        if (subTask === taskName) {
-            toggleSubTask('');
-        } else {
-            toggleSubTask(taskName)
-            toggleShowSubTaskModal(false)
-        }
-    }
-
     useEffect(() => {
         return ref.onSnapshot((querySnapshot) => {
             const taskTypesList = [];
             querySnapshot.forEach(doc => {
-                const { name, title } = doc.data();
+
+                const { name, title, fields } = doc.data();
+                // console.log(fields)
                 const taskObj = {
                     id: doc.id,
                     title,
                     name,
+                    fields,
                     subtasks: {}
                 };
 
@@ -95,6 +79,54 @@ const CategorySection = () => {
         });
     }, [])
 
+
+    const toggleButtonTask = (taskName) => {
+
+        // if the task is already selected, then toggle it off
+        if (task === taskName) {
+            toggleTask('');
+            toggleSubTask('')
+        } else {
+            toggleTask(taskName)
+            toggleSubTask('')
+        }
+
+        const subTaskObj = getSubTasksObj(getSelectedTaskObj(taskName))
+        if (subTaskObj === false) {
+            toggleShowSubTaskModal(false)
+        } else {
+            toggleShowSubTaskModal(true)
+        }
+    }
+
+    const toggleButtonSubTask = (taskName) => {
+
+        // if the task is already selected, then toggle it off
+        if (subTask === taskName) {
+            toggleSubTask('');
+        } else {
+            toggleSubTask(taskName)
+            toggleShowSubTaskModal(false)
+        }
+    }
+
+    const getSelectedTaskObj = (taskName) => {
+        // console.log(taskName)
+        if (!taskName) taskName = task
+        if (taskName === '' || taskName === undefined) return false
+        return taskTypes.find(taskObj => taskObj.name === taskName)
+    }
+
+    const getSubTasksObj = (taskObj) => {
+        // console.log(taskObj)
+        if ('subtasks' in taskObj) {
+            const subTasks = taskObj['subtasks'];
+            if (subTasks.length < 1 || Object.keys(subTasks).length === 0) return false
+            return subTasks
+        }
+        return false
+    }
+
     const renderOptions = () => {
         return taskTypes.map((option, i) => {
             return (
@@ -114,40 +146,68 @@ const CategorySection = () => {
 
     const renderSubOptions = () => {
         if (!task || task === '') return (<></>)
-        const taskObj = taskTypes.find(taskObj => taskObj.name === task)
-        if ('subtasks' in taskObj) {
-            const subTasks = taskObj['subtasks'];
 
-            if (subTasks.length < 1 || Object.keys(subTasks).length === 0) return (<Text>No Sub Tasks</Text>)
-
-            return subTasks.map((option, i) => {
-                return (
-                    <Button
-                        key={i}
-                        mode={(subTask === option.name) ? "contained" : "outlined"}
-                        compact
-                        color={(subTask === option.name) ? theme_file.colors.primary : theme_file.colors.text}
-                        uppercase={false}
-                        style={styles.button}
-                        onPress={() => toggleButtonSubTask(option.name)}>
-                        {option.title}
-                    </Button>
-                )
-            })
-        } else {
-            return (
-                <Text>No Sub Tasks</Text>
-            )
+        const returnNoSubTask = () => {
+            return (<Text>No Sub tasks</Text>)
         }
+
+        const taskObj = getSelectedTaskObj()
+        if (!taskObj) {
+            return (<Text>Invalid Task</Text>)
+        }
+        const subTasks = getSubTasksObj(taskObj)
+        if (!subTasks) return returnNoSubTask()
+        return subTasks.map((option, i) => {
+            return (
+                <Button
+                    key={i}
+                    mode={(subTask === option.name) ? "contained" : "outlined"}
+                    compact
+                    color={(subTask === option.name) ? theme_file.colors.primary : theme_file.colors.text}
+                    uppercase={false}
+                    style={styles.button}
+                    onPress={() => toggleButtonSubTask(option.name)}>
+                    {option.title}
+                </Button>
+            )
+        })
+
     }
 
     const getSubTaskTitle = () => {
-        const taskObj = taskTypes.find(taskObj => taskObj.name === task)
+        const taskObj = getSelectedTaskObj()
+        if (!taskObj) return "n/a";
         const subTasks = taskObj['subtasks'];
         if (Object.keys(subTasks).length === 0 || subTasks.length < 1) return "n/a"
         const subTaskObj = subTasks.find(subTaskObj => subTaskObj.name === subTask)
         return subTaskObj.title
     }
+
+    const renderTaskExtraFields = () => {
+        const taskObj = getSelectedTaskObj()
+        if (taskObj === false) return (<Title>JUST NO</Title>)
+        if ('fields' in taskObj) {
+            const taskExtraFields = taskObj['fields']
+            if (!taskExtraFields) return (<Title>NO FIELDS</Title>)
+            const extraFields = taskExtraFields.map((field, index) => {
+                const { type } = field
+                switch (type) {
+                    case 'fs_multi_select_list':
+                        return (
+                            <RnFirebaseMultiSelectList
+                                extraFieldsObj={extraFields}
+                                toggleExtraFieldsObj={toggleExtraFieldValues}
+                                key={index} {...field}></RnFirebaseMultiSelectList>
+                        )
+                        break;
+                }
+            });
+            return (<>{extraFields}</>)
+        } else {
+            return (<Title>NO FIELDS</Title>)
+        }
+    }
+
     return (
         <View>
             <Title>Task</Title>
@@ -160,6 +220,7 @@ const CategorySection = () => {
                     <Button mode="contained" uppercase={false} compact>{getSubTaskTitle()}</Button>
                 </FlexContainer>
             )}
+            {renderTaskExtraFields()}
             <Portal>
                 <Dialog visible={showSubTaskModal} onDismiss={() => toggleShowSubTaskModal(false)}>
                     <Dialog.Title>Choose a sub task</Dialog.Title>
