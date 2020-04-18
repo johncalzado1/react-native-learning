@@ -5,6 +5,7 @@ import firestore from '@react-native-firebase/firestore';
 import { TimeInputControl, FlexContainer } from '../theme'
 import { theme_file } from '../theme_file';
 import { RnFirebaseMultiSelectList } from '../components/rnfirebase_list/rnfirebase_list';
+import { ModalList } from '../components/modal_list/modal_list';
 
 const styles = StyleSheet.create({
     button: {
@@ -19,15 +20,20 @@ const styles = StyleSheet.create({
 });
 
 export const AddTaskScreen = () => {
+    const [values, toggleValues] = useState({})
+    const submitTask = () => {
+        console.log("TASK", values)
+    }
     return (
         <ScrollView style={{ margin: 10 }}>
-            <CategorySection />
+            <CategorySection values={values} toggleValues={toggleValues} />
             <TimeSection />
+            <Button onPress={submitTask}>YO</Button>
         </ScrollView>
     )
 }
 
-const CategorySection = () => {
+const CategorySection = ({ values, toggleValues }) => {
 
     // Form values
     const [task, toggleTask] = useState(undefined);
@@ -41,6 +47,7 @@ const CategorySection = () => {
     const ref = firestore().collection('task_type');
 
     useEffect(() => {
+        updateCategorySectionValues()
         return ref.onSnapshot((querySnapshot) => {
             const taskTypesList = [];
             querySnapshot.forEach(doc => {
@@ -77,21 +84,30 @@ const CategorySection = () => {
                 setLoading(false);
             }
         });
-    }, [])
+    }, [task, extraFieldValues])
 
+    const updateCategorySectionValues = () => {
+        const taskValues = { task: task }
+        toggleValues({ ...values, ...extraFieldValues, ...taskValues })
+    }
 
     const toggleButtonTask = (taskName) => {
 
         // if the task is already selected, then toggle it off
+        // console.log(task, taskName)
+        toggleExtraFieldValues({})
         if (task === taskName) {
             toggleTask('');
             toggleSubTask('')
+            toggleShowSubTaskModal(false)
+            return
         } else {
             toggleTask(taskName)
             toggleSubTask('')
         }
 
         const subTaskObj = getSubTasksObj(getSelectedTaskObj(taskName))
+        // console.log(subTaskObj)
         if (subTaskObj === false) {
             toggleShowSubTaskModal(false)
         } else {
@@ -185,20 +201,28 @@ const CategorySection = () => {
 
     const renderTaskExtraFields = () => {
         const taskObj = getSelectedTaskObj()
-        if (taskObj === false) return (<Title>JUST NO</Title>)
+        if (taskObj === false) return
         if ('fields' in taskObj) {
             const taskExtraFields = taskObj['fields']
-            if (!taskExtraFields) return (<Title>NO FIELDS</Title>)
+            if (!taskExtraFields) return
             const extraFields = taskExtraFields.map((field, index) => {
                 const { type } = field
                 switch (type) {
-                    case 'fs_multi_select_list':
+                    case 'fs_multi_select_list_with_search':
                         return (
                             <RnFirebaseMultiSelectList
-                                extraFieldsObj={extraFields}
+                                extraFieldsObj={extraFieldValues}
                                 toggleExtraFieldsObj={toggleExtraFieldValues}
                                 key={index} {...field}></RnFirebaseMultiSelectList>
                         )
+                        break;
+                    case 'modal_list':
+                        return (
+                            <ModalList
+                                extraFieldsObj={extraFieldValues}
+                                toggleExtraFieldsObj={toggleExtraFieldValues}
+                                key={index} {...field}></ModalList>
+                        );
                         break;
                 }
             });

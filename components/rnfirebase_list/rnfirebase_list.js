@@ -19,7 +19,6 @@ const styles = StyleSheet.create({
 
 export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, extraFieldsObj, toggleExtraFieldsObj }) => {
 
-    const [ok, toggleOk] = useState([])
     const [items, setItems] = useState([])
     const [filteredItems, setFilteredItems] = useState([])
     const [selectedItems, toggleSelectedItems] = useState([]) // initialise selectedItems
@@ -29,6 +28,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
     const ref = firestore().collection(collection);
 
     useEffect(() => {
+        updateExtraFieldsValues()
         return ref.onSnapshot(querySnapShot => {
             const listItems = []
             querySnapShot.forEach(doc => {
@@ -40,7 +40,21 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
             setItems(listItems)
             setFilteredItems(listItems)
         })
-    }, [])
+    }, [selectedItems])
+
+    const updateExtraFieldsValues = () => {
+        // for updating ExtraFields back to parent
+        console.log("select", selectedItems)
+
+        const _state = { ...extraFieldsObj }
+        if (selectedItems.length > 0) {
+            _state[name] = selectedItems
+        } else {
+            delete _state[name]
+        }
+        toggleExtraFieldsObj(_state)
+
+    }
 
     const searchFilterFunction = text => {
         setSearchVal(text)
@@ -103,7 +117,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
         }
     }
 
-    console.log("re-render")
+    // console.log("re-render")
 
     return (
         <>
@@ -117,7 +131,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
                         <FlatList
                             data={filteredItems}
                             keyExtractor={item => item.id}
-                            renderItem={({ item }) => <List.Item title={item.title} onPress={() => appendToListOfSelectedItems(item.id)} />}
+                            renderItem={({ item }) => <List.Item title={item[keys[0]]} onPress={() => appendToListOfSelectedItems(item.id)} />}
                             ListHeaderComponent={renderListHeader()}
                         />
                     </Dialog.ScrollArea>
