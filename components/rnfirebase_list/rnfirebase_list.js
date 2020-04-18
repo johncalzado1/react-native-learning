@@ -3,17 +3,23 @@ import { View, ScrollView, StyleSheet, FlatList } from 'react-native';
 import { Text, Title, Searchbar, List, Portal, Dialog, Button, Chip, Caption } from 'react-native-paper'
 import firestore from '@react-native-firebase/firestore';
 import { FlexContainer, FlexItem } from '../../theme/flex_layout'
+import { helpers } from '../../helpers'
 
 const styles = StyleSheet.create({
     buttonContainer: {
         display: "flex",
         flexDirection: "row",
         flexWrap: "wrap"
+    },
+    button: {
+        marginBottom: 10,
+        marginRight: 10
     }
 });
 
 export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, extraFieldsObj, toggleExtraFieldsObj }) => {
 
+    const [ok, toggleOk] = useState([])
     const [items, setItems] = useState([])
     const [filteredItems, setFilteredItems] = useState([])
     const [selectedItems, toggleSelectedItems] = useState([]) // initialise selectedItems
@@ -34,7 +40,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
             setItems(listItems)
             setFilteredItems(listItems)
         })
-    }, [toggleSelectedItems])
+    }, [])
 
     const searchFilterFunction = text => {
         setSearchVal(text)
@@ -62,12 +68,13 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
         )
     }
 
+
     const renderSelectedItems = () => {
-        console.log("HUH", selectedItems)
         const selectedItemsGroup = selectedItems.map((item, index) => {
+            const itemObj = helpers.findValueInArrayOfObjs(items, item, 'id')
             return (
                 <FlexItem key={index}>
-                    <Chip icon="close">test</Chip>
+                    <Chip icon="close" style={styles.button} onPress={() => removeFromSelectedItems(item)}>{itemObj.title}</Chip>
                 </FlexItem>
             )
         })
@@ -78,18 +85,30 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
         )
     }
 
+    const removeFromSelectedItems = (itemName) => {
+        const itemIndex = selectedItems.indexOf(itemName)
+        if (itemIndex > -1) {
+            const _selectedItems = selectedItems.map(item => item);
+            _selectedItems.splice(itemIndex, 1)
+            toggleSelectedItems(_selectedItems)
+        }
+    }
+
     const appendToListOfSelectedItems = (itemName) => {
-        console.log(itemName)
+        // console.log(itemName)
         if (selectedItems.indexOf(itemName) === -1) {
-            const _selectedItems = selectedItems
+            const _selectedItems = selectedItems.map(item => item);
             _selectedItems.push(itemName)
             toggleSelectedItems(_selectedItems)
         }
     }
 
+    console.log("re-render")
+
     return (
         <>
             <Title>{title}</Title>
+            {renderSelectedItems()}
             <Button compact mode="outlined" icon="plus" onPress={() => toggleShowSearchModal(true)}>add food</Button>
             <Portal>
                 <Dialog visible={showSearchModal} onDismiss={() => toggleShowSearchModal(false)}>
