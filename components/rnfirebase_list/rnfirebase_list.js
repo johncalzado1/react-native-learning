@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     }
 });
 
-export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, extraFieldsObj, toggleExtraFieldsObj }) => {
+export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, toggleOutput }) => {
 
     const [items, setItems] = useState([]) // list of items from firebase based on 'collection'
     const [filteredItems, setFilteredItems] = useState([]) // filtered version of items because we have a search bar
@@ -54,19 +54,8 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
         which is used in the parent element.
     */
     const updateExtraFieldsValues = (value) => {
-        // for updating ExtraFields back to parent
-        // console.log("select", selectedItems)
-
         _value = (!value) ? selectedItems : value
-
-        const _state = { ...extraFieldsObj }
-        if (_value.length > 0) {
-            _state[name] = _value
-        } else {
-            _state[name] = undefined
-        }
-        toggleExtraFieldsObj(_state)
-
+        toggleOutput({ [name]: (_value.length > 0) ? _value : undefined })
     }
 
     const searchFilterFunction = text => {

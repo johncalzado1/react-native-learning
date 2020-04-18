@@ -45,6 +45,11 @@ const CategorySection = ({ values, toggleValues }) => {
 
     const ref = firestore().collection(configs.taskCollection);
 
+    const extraFieldsToggler = (value) => {
+        console.log("extra fields", extraFieldValues, value)
+        toggleExtraFieldValues({ ...extraFieldValues, ...value })
+    }
+
     useEffect(() => {
         updateCategorySectionValues()
         return ref.onSnapshot((querySnapshot) => {
@@ -125,16 +130,14 @@ const CategorySection = ({ values, toggleValues }) => {
                     case 'fs_multi_select_list_with_search':
                         return (
                             <RnFirebaseMultiSelectList
-                                extraFieldsObj={extraFieldValues}
-                                toggleExtraFieldsObj={toggleExtraFieldValues}
+                                toggleOutput={extraFieldsToggler}
                                 key={index} {...field}></RnFirebaseMultiSelectList>
                         )
                         break;
                     case 'modal_list':
                         return (
                             <ModalList
-                                extraFieldsObj={extraFieldValues}
-                                toggleExtraFieldsObj={toggleExtraFieldValues}
+                                toggleOutput={extraFieldsToggler}
                                 key={index}
                                 fireBaseRef={[
                                     { type: 'collection', value: configs.taskCollection },

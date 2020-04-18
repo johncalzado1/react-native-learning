@@ -42,7 +42,7 @@ const getFirebaseRef = (fsRef = []) => {
         { type: 'document', value: "doc1234" }
     ]}
 */
-export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, extraFieldsObj, toggleExtraFieldsObj }) => {
+export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, toggleOutput }) => {
 
     const [items, setItems] = useState([])
     const [selectedItem, toggleSelectedItem] = useState(undefined);
@@ -51,10 +51,10 @@ export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, ex
     const [modalVisible, toggleModalVisible] = useState(true)
 
     useEffect(() => {
+        updateExtraFieldsValues()
         const subcriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
             querySnapShot.forEach(doc => {
-                console.log(doc.data())
                 listItems.push({
                     id: doc.id,
                     ...doc.data()
@@ -64,9 +64,23 @@ export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, ex
         })
 
         return function cleanup() {
+            updateExtraFieldsValues("empty") // We update the extraFields obj with empty values
             subcriber()
         }
     }, [selectedItem])
+
+    /* 
+        Update extra fields based on selectedItems or input value
+        we use an input value parameter because we use this function
+        when the component unmounts, when the component un mounts we want
+        to basically pass back empty fields to the extraFieldsValue obj
+        which is used in the parent element.
+    */
+    const updateExtraFieldsValues = (value) => {
+        _value = (value === "empty") ? undefined : selectedItem
+        toggleOutput({ [name]: (!_value) ? undefined : _value })
+    }
+
 
     // gets which keys to grab from items via the keys props
     const getItemValueBasedOnKeys = (itemId) => {
