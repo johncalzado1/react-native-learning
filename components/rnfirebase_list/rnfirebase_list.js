@@ -19,8 +19,8 @@ const styles = StyleSheet.create({
 
 export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, extraFieldsObj, toggleExtraFieldsObj }) => {
 
-    const [items, setItems] = useState([])
-    const [filteredItems, setFilteredItems] = useState([])
+    const [items, setItems] = useState([]) // list of items from firebase based on 'collection'
+    const [filteredItems, setFilteredItems] = useState([]) // filtered version of items because we have a search bar
     const [selectedItems, toggleSelectedItems] = useState([]) // initialise selectedItems
     const [searchVal, setSearchVal] = useState('')
     const [showSearchModal, toggleShowSearchModal] = useState(false)
@@ -29,7 +29,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
 
     useEffect(() => {
         updateExtraFieldsValues()
-        return ref.onSnapshot(querySnapShot => {
+        const subscriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
             querySnapShot.forEach(doc => {
                 listItems.push({
@@ -40,17 +40,30 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
             setItems(listItems)
             setFilteredItems(listItems)
         })
+        return function cleanup() {
+            updateExtraFieldsValues([]) // We update the extraFields obj with empty values
+            subscriber() // unsubscribe to firebase 
+        }
     }, [selectedItems])
 
-    const updateExtraFieldsValues = () => {
+    /* 
+        Update extra fields based on selectedItems or input value
+        we use an input value parameter because we use this function
+        when the component unmounts, when the component un mounts we want
+        to basically pass back empty fields to the extraFieldsValue obj
+        which is used in the parent element.
+    */
+    const updateExtraFieldsValues = (value) => {
         // for updating ExtraFields back to parent
-        console.log("select", selectedItems)
+        // console.log("select", selectedItems)
+
+        _value = (!value) ? selectedItems : value
 
         const _state = { ...extraFieldsObj }
-        if (selectedItems.length > 0) {
-            _state[name] = selectedItems
+        if (_value.length > 0) {
+            _state[name] = _value
         } else {
-            delete _state[name]
+            _state[name] = undefined
         }
         toggleExtraFieldsObj(_state)
 
@@ -116,8 +129,6 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
             toggleSelectedItems(_selectedItems)
         }
     }
-
-    // console.log("re-render")
 
     return (
         <>

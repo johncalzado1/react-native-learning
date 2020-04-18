@@ -6,6 +6,7 @@ import { TimeInputControl, FlexContainer } from '../theme'
 import { theme_file } from '../theme_file';
 import { RnFirebaseMultiSelectList } from '../components/rnfirebase_list/rnfirebase_list';
 import { ModalList } from '../components/modal_list/modal_list';
+import { helpers } from '../helpers';
 
 const styles = StyleSheet.create({
     button: {
@@ -28,7 +29,7 @@ export const AddTaskScreen = () => {
         <ScrollView style={{ margin: 10 }}>
             <CategorySection values={values} toggleValues={toggleValues} />
             <TimeSection />
-            <Button onPress={submitTask}>YO</Button>
+            <Button onPress={submitTask}>Add</Button>
         </ScrollView>
     )
 }
@@ -58,8 +59,7 @@ const CategorySection = ({ values, toggleValues }) => {
                     id: doc.id,
                     title,
                     name,
-                    fields,
-                    subtasks: {}
+                    fields
                 };
 
                 ref.doc(doc.id).collection('subtask_type').onSnapshot(subTaskQuerySnapshot => {
@@ -88,6 +88,7 @@ const CategorySection = ({ values, toggleValues }) => {
 
     const updateCategorySectionValues = () => {
         const taskValues = { task: task }
+        console.log("update category", values, extraFieldValues, taskValues)
         toggleValues({ ...values, ...extraFieldValues, ...taskValues })
     }
 
@@ -95,17 +96,18 @@ const CategorySection = ({ values, toggleValues }) => {
 
         // if the task is already selected, then toggle it off
         // console.log(task, taskName)
-        toggleExtraFieldValues({})
+        // toggleExtraFieldValues({ ...extraFieldValues, ...helpers.setAllKeysToUndefined(extraFieldValues) })
         if (task === taskName) {
-            toggleTask('');
-            toggleSubTask('')
+            toggleTask(undefined);
+            toggleSubTask(undefined)
             toggleShowSubTaskModal(false)
             return
         } else {
             toggleTask(taskName)
-            toggleSubTask('')
+            toggleSubTask(undefined)
         }
 
+        // Check if there are sub tasks
         const subTaskObj = getSubTasksObj(getSelectedTaskObj(taskName))
         // console.log(subTaskObj)
         if (subTaskObj === false) {
@@ -119,7 +121,7 @@ const CategorySection = ({ values, toggleValues }) => {
 
         // if the task is already selected, then toggle it off
         if (subTask === taskName) {
-            toggleSubTask('');
+            toggleSubTask(undefined);
         } else {
             toggleSubTask(taskName)
             toggleShowSubTaskModal(false)
