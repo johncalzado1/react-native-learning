@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     }
 });
 
-export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, toggleOutput }) => {
+export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, toggleOutput, reRender }) => {
 
     const [items, setItems] = useState([]) // list of items from firebase based on 'collection'
     const [filteredItems, setFilteredItems] = useState([]) // filtered version of items because we have a search bar
@@ -28,6 +28,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
     const ref = firestore().collection(collection);
 
     useEffect(() => {
+        console.log("_______mount rfnlist")
         updateExtraFieldsValues()
         const subscriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
@@ -41,6 +42,7 @@ export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys,
             setFilteredItems(listItems)
         })
         return function cleanup() {
+            console.log("_______unmount rfnlist")
             updateExtraFieldsValues([]) // We update the extraFields obj with empty values
             subscriber() // unsubscribe to firebase 
         }

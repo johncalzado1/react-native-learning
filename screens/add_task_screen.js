@@ -75,7 +75,7 @@ const CategorySection = ({ values, toggleValues }) => {
 
     const updateCategorySectionValues = () => {
         const taskValues = { task: task }
-        console.log("update category", values, extraFieldValues, taskValues)
+        // console.log("update category", values, extraFieldValues, taskValues)
         toggleValues({ ...values, ...extraFieldValues, ...taskValues })
     }
 
@@ -117,19 +117,42 @@ const CategorySection = ({ values, toggleValues }) => {
         })
     }
 
+    return (
+        <View>
+            <Title>Task</Title>
+            <View style={styles.buttonContainer}>
+                {renderOptions()}
+            </View>
+            <ExtraFields extraFieldsToggler={extraFieldsToggler} taskObj={getSelectedTaskObj()}></ExtraFields>
+        </View >
+    )
+}
 
+const ExtraFields = ({ taskObj, extraFieldsToggler }) => {
+
+    const [reRender, toggleReRender] = useState(false)
+
+    useEffect(() => {
+        console.log("___mount extra", !reRender)
+        toggleReRender(!reRender)
+
+        return function cleanup() {
+            console.log("___unmount extra")
+        }
+    }, [taskObj])
     const renderTaskExtraFields = () => {
-        const taskObj = getSelectedTaskObj()
         if (taskObj === false) return
         if ('fields' in taskObj) {
             const taskExtraFields = taskObj['fields']
             if (!taskExtraFields) return
             const extraFields = taskExtraFields.map((field, index) => {
                 const { type } = field
+                console.log("TYPE", type, field)
                 switch (type) {
                     case 'fs_multi_select_list_with_search':
                         return (
                             <RnFirebaseMultiSelectList
+                                reRender={reRender}
                                 toggleOutput={extraFieldsToggler}
                                 key={index} {...field}></RnFirebaseMultiSelectList>
                         )
@@ -137,6 +160,7 @@ const CategorySection = ({ values, toggleValues }) => {
                     case 'modal_list_with_add':
                         return (
                             <ModalList
+                                reRender={reRender}
                                 toggleOutput={extraFieldsToggler}
                                 key={index}
                                 fireBaseRef={[
@@ -153,15 +177,8 @@ const CategorySection = ({ values, toggleValues }) => {
             return (<Title>NO FIELDS</Title>)
         }
     }
-
     return (
-        <View>
-            <Title>Task</Title>
-            <View style={styles.buttonContainer}>
-                {renderOptions()}
-            </View>
-            {renderTaskExtraFields()}
-        </View >
+        <>{renderTaskExtraFields()}</>
     )
 }
 

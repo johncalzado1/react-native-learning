@@ -42,7 +42,7 @@ const getFirebaseRef = (fsRef = []) => {
         { type: 'document', value: "doc1234" }
     ]}
 */
-export const ModalList = ({ type, title, name, keys, collection, add_fields, fireBaseRef, toggleOutput }) => {
+export const ModalList = ({ type, title, name, keys, collection, add_fields, fireBaseRef, toggleOutput, reRender }) => {
 
     const [items, setItems] = useState([])
     const [selectedItem, toggleSelectedItem] = useState(undefined);
@@ -51,6 +51,7 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
     const [screenState, toggleScreenState] = useState('list') //list, add
 
     useEffect(() => {
+        console.log("_______mount modal list")
         updateExtraFieldsValues()
         const subcriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
@@ -64,6 +65,7 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
         })
 
         return function cleanup() {
+            console.log("_______unmount modal list")
             updateExtraFieldsValues("empty") // We update the extraFields obj with empty values
             subcriber()
         }
@@ -114,6 +116,8 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
             )
         })
     }
+
+    console.log("RENDERRRR", reRender)
 
     const renderListModal = () => {
         return (
