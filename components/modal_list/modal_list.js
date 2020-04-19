@@ -122,7 +122,6 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
 
 
     const renderListModal = () => {
-        if (items.length === 0) toggleModalVisible(false)
         return (
             <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
                 <Dialog.Title>{task}</Dialog.Title>
@@ -169,21 +168,20 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
     }
 
 
-    if (isLoading === true) return (<></>)
-
+    if (isLoading === true || items.length === 0) return (<></>)
     return (
         <>
-            <Button onPress={() => {
-                toggleScreenState('add')
-                toggleModalVisible(true)
-            }
-            }>Add New {title}</Button>
             {(selectedItem !== '' && selectedItem !== undefined) && (
                 <FlexContainer direction="row" alignItems="center">
                     <Subheading>{title}: </Subheading>
                     <Button mode="contained" uppercase={false} compact>{getItemValueBasedOnKeys()}</Button>
                 </FlexContainer>
             )}
+            <Button onPress={() => {
+                toggleScreenState('add')
+                toggleModalVisible(true)
+            }
+            }>Add New {title}</Button>
             <Portal>
                 {renderModal()}
             </Portal>
@@ -223,6 +221,7 @@ const AddNewOptions = ({ addFields, fireBaseRef, toggleScreenState, toggleModalV
     }
 
     const renderedFields = () => addFields.map((item, index) => {
+
         return (
             <View key={index}>
                 <Caption>{item.key}</Caption>

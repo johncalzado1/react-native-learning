@@ -122,7 +122,15 @@ const CategorySection = ({ values, toggleValues }) => {
     }
 
     const getTaskTitle = () => {
-        return (!task || task === '') ? task : helpers.findValueInArrayOfObjs(taskTypes, task, 'id')['title']
+        let _val = ''
+        if (!task || task === '') {
+            _val = task
+        } else {
+            _val = helpers.findValueInArrayOfObjs(taskTypes, task, 'id')
+            console.log(_val)
+            _val = _val['title']
+        }
+        return _val
     }
 
     return (
