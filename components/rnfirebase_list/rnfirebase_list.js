@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     }
 });
 
-export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, toggleOutput, reRender }) => {
+export const RnFirebaseMultiSelectList = ({ type, title, collection, name, keys, search_key, toggleOutput, modalVisible, toggleModalVisible }) => {
 
     const [items, setItems] = useState([]) // list of items from firebase based on 'collection'
     const [filteredItems, setFilteredItems] = useState([]) // filtered version of items because we have a search bar

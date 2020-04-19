@@ -43,6 +43,8 @@ const CategorySection = ({ values, toggleValues }) => {
     const [taskTypes, setTaskTypes] = useState([])
     const [loading, setLoading] = useState(true);
 
+    const [modalVisible, toggleModalVisible] = useState(false)
+
     const ref = firestore().collection(configs.taskCollection);
 
     const extraFieldsToggler = (value) => {
@@ -91,6 +93,7 @@ const CategorySection = ({ values, toggleValues }) => {
             toggleTask(taskName)
         }
 
+
     }
 
     const getSelectedTaskObj = (taskName) => {
@@ -123,18 +126,19 @@ const CategorySection = ({ values, toggleValues }) => {
             <View style={styles.buttonContainer}>
                 {renderOptions()}
             </View>
-            <ExtraFields extraFieldsToggler={extraFieldsToggler} taskObj={getSelectedTaskObj()}></ExtraFields>
+            <ExtraFields extraFieldsToggler={extraFieldsToggler} taskObj={getSelectedTaskObj()} visible={true} task={task}></ExtraFields>
         </View >
     )
 }
 
-const ExtraFields = ({ taskObj, extraFieldsToggler }) => {
+const ExtraFields = ({ taskObj, extraFieldsToggler, task }) => {
 
-    const [reRender, toggleReRender] = useState(false)
+
+    const [modalVisible, toggleModalVisible] = useState(true)
 
     useEffect(() => {
-        console.log("___mount extra", !reRender)
-        toggleReRender(!reRender)
+        toggleModalVisible(true)
+        console.log("___mount extra")
 
         return function cleanup() {
             console.log("___unmount extra")
@@ -147,12 +151,13 @@ const ExtraFields = ({ taskObj, extraFieldsToggler }) => {
             if (!taskExtraFields) return
             const extraFields = taskExtraFields.map((field, index) => {
                 const { type } = field
-                console.log("TYPE", type, field)
+                // console.log("TYPE", type, field)
                 switch (type) {
                     case 'fs_multi_select_list_with_search':
                         return (
                             <RnFirebaseMultiSelectList
-                                reRender={reRender}
+                                toggleModalVisible={toggleModalVisible}
+                                modalVisible={modalVisible}
                                 toggleOutput={extraFieldsToggler}
                                 key={index} {...field}></RnFirebaseMultiSelectList>
                         )
@@ -160,7 +165,9 @@ const ExtraFields = ({ taskObj, extraFieldsToggler }) => {
                     case 'modal_list_with_add':
                         return (
                             <ModalList
-                                reRender={reRender}
+                                toggleModalVisible={toggleModalVisible}
+                                modalVisible={modalVisible}
+                                task={task}
                                 toggleOutput={extraFieldsToggler}
                                 key={index}
                                 fireBaseRef={[

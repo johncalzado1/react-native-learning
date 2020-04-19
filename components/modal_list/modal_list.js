@@ -42,16 +42,15 @@ const getFirebaseRef = (fsRef = []) => {
         { type: 'document', value: "doc1234" }
     ]}
 */
-export const ModalList = ({ type, title, name, keys, collection, add_fields, fireBaseRef, toggleOutput, reRender }) => {
+export const ModalList = ({ type, title, name, keys, collection, add_fields, fireBaseRef, toggleOutput, modalVisible, toggleModalVisible, task }) => {
 
     const [items, setItems] = useState([])
     const [selectedItem, toggleSelectedItem] = useState(undefined);
     const ref = getFirebaseRef([...fireBaseRef, { type: 'collection', value: collection.toString() }])
-    const [modalVisible, toggleModalVisible] = useState(true)
     const [screenState, toggleScreenState] = useState('list') //list, add
 
     useEffect(() => {
-        console.log("_______mount modal list")
+        console.log("_______mount modal list", modalVisible)
         updateExtraFieldsValues()
         const subcriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
@@ -69,7 +68,7 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
             updateExtraFieldsValues("empty") // We update the extraFields obj with empty values
             subcriber()
         }
-    }, [selectedItem])
+    }, [selectedItem, task])
 
     /* 
         Update extra fields based on selectedItems or input value
@@ -117,7 +116,6 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
         })
     }
 
-    console.log("RENDERRRR", reRender)
 
     const renderListModal = () => {
         return (
