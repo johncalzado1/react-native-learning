@@ -7,6 +7,7 @@ import { theme_file } from '../theme_file';
 import { RnFirebaseMultiSelectList } from '../components/rnfirebase_list/rnfirebase_list';
 import { ModalList } from '../components/modal_list/modal_list';
 import { configs } from '../config';
+import { helpers } from '../helpers';
 
 const styles = StyleSheet.create({
     button: {
@@ -48,7 +49,7 @@ const CategorySection = ({ values, toggleValues }) => {
     const ref = firestore().collection(configs.taskCollection);
 
     const extraFieldsToggler = (value) => {
-        console.log("extra fields", extraFieldValues, value)
+        // console.log("extra fields", extraFieldValues, value)
         toggleExtraFieldValues({ ...extraFieldValues, ...value })
     }
 
@@ -100,7 +101,7 @@ const CategorySection = ({ values, toggleValues }) => {
         // console.log(taskName)
         if (!taskName) taskName = task
         if (taskName === '' || taskName === undefined) return false
-        return taskTypes.find(taskObj => taskObj.name === taskName)
+        return taskTypes.find(taskObj => taskObj.id === taskName)
     }
 
     const renderOptions = () => {
@@ -108,16 +109,20 @@ const CategorySection = ({ values, toggleValues }) => {
             return (
                 <Button
                     key={i}
-                    mode={(task === option.name) ? "contained" : "outlined"}
+                    mode={(task === option.id) ? "contained" : "outlined"}
                     compact
-                    color={(task === option.name) ? theme_file.colors.primary : theme_file.colors.text}
+                    color={(task === option.id) ? theme_file.colors.primary : theme_file.colors.text}
                     uppercase={false}
                     style={styles.button}
-                    onPress={() => toggleButtonTask(option.name)}>
+                    onPress={() => toggleButtonTask(option.id)}>
                     {option.title}
                 </Button>
             )
         })
+    }
+
+    const getTaskTitle = () => {
+        return (!task || task === '') ? task : helpers.findValueInArrayOfObjs(taskTypes, task, 'id')['title']
     }
 
     return (
@@ -126,7 +131,11 @@ const CategorySection = ({ values, toggleValues }) => {
             <View style={styles.buttonContainer}>
                 {renderOptions()}
             </View>
-            <ExtraFields extraFieldsToggler={extraFieldsToggler} taskObj={getSelectedTaskObj()} visible={true} task={task}></ExtraFields>
+            <ExtraFields
+                extraFieldsToggler={extraFieldsToggler}
+                taskObj={getSelectedTaskObj()}
+                visible={true}
+                task={getTaskTitle()}></ExtraFields>
         </View >
     )
 }
@@ -138,10 +147,10 @@ const ExtraFields = ({ taskObj, extraFieldsToggler, task }) => {
 
     useEffect(() => {
         toggleModalVisible(true)
-        console.log("___mount extra")
+        helpers.print("___mount extra", "lol")
 
         return function cleanup() {
-            console.log("___unmount extra")
+            helpers.print("___unmount extra")
         }
     }, [taskObj])
     const renderTaskExtraFields = () => {

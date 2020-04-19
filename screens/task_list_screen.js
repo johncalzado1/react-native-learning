@@ -46,68 +46,69 @@ export const TaskListScreen = ({ navigation }) => {
                 color={Colors.white}
                 onPress={() => navigation.navigate(screen_configs.AddTaskScreen.name)}
             />
+            {/* <TestComponent></TestComponent> */}
         </>
     );
 }
 
-// const TestComponent = () => {
-//     const [projectsFields, toggleProjectsFields] = useState({})
-//     const [tasks, setTasks] = useState({})
+const TestComponent = () => {
+    const [projectsFields, toggleProjectsFields] = useState({})
+    const [tasks, setTasks] = useState({})
 
-//     useEffect(() => {
-//         getProjectFields()
-//         getAllTasks()
-//     }, [])
+    useEffect(() => {
+        getProjectFields()
+        getAllTasks()
+    }, [])
 
-//     const getProjectFields = () => {
-//         firestore()
-//             .collection('task_type')
-//             .doc('self_projects')
-//             .get()
-//             .then(doc => {
-//                 toggleProjectsFields(doc.data().fields)
-//             })
-//     }
+    const getProjectFields = () => {
+        firestore()
+            .collection('task_type')
+            .doc('self_projects')
+            .get()
+            .then(doc => {
+                toggleProjectsFields(doc.data().fields)
+            })
+    }
 
-//     const getAllTasks = () => {
-//         firestore()
-//             .collection('task_type')
-//             .get()
-//             .then(docs => {
-//                 const _list = []
-//                 docs.forEach(doc => {
-//                     const data = doc.data()
-//                     if ("fields" in data === false) {
-//                         _list.push({ id: doc.id, ...data })
-//                     }
-//                 })
-//                 setTasks(_list)
-//             })
-//     }
+    const getAllTasks = () => {
+        firestore()
+            .collection('task_type')
+            .get()
+            .then(docs => {
+                const _list = []
+                docs.forEach(doc => {
+                    const data = doc.data()
+                    if ("fields" in data === false) {
+                        _list.push({ id: doc.id, ...data })
+                    }
+                })
+                setTasks(_list)
+            })
+    }
 
-//     const addToFireStore = () => {
-//         if (!tasks) return
+    const addToFireStore = () => {
+        if (!tasks) return
 
-//         tasks.forEach(task => {
-//             firestore()
-//                 .collection('task_type')
-//                 .doc(task.id)
-//                 .update({
-//                     ...task,
-//                     fields: projectsFields
-//                 })
-//                 .then(() => console.log("ADDED"))
-//         })
-//     }
+        tasks.forEach(task => {
+            firestore()
+                .collection('task_type')
+                .doc(task.id)
+                .update({
+                    ...task,
+                    fields: projectsFields
+                })
+                .then(() => console.log("ADDED"))
+        })
+    }
 
-//     const buttonPress = () => {
-//         console.log(tasks, projectsFields)
-//         addToFireStore()
-//     }
+    const buttonPress = () => {
+        console.log(tasks, projectsFields)
+        addToFireStore()
+    }
 
 
-//     return (<><Button onPress={buttonPress}>PRESS</Button></>)
-// }
+    return (<><Button onPress={buttonPress}>PRESS</Button></>)
+}
 
 const styles = StyleSheet.create({
     fab: {

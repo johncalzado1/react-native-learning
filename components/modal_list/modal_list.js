@@ -4,6 +4,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { TimeInputControl, FlexContainer, FlexItem } from '../../theme'
 import { theme_file } from '../../theme_file';
 import firestore from '@react-native-firebase/firestore'
+import { helpers } from '../../helpers';
 
 const styles = StyleSheet.create({
     button: {
@@ -48,10 +49,12 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
     const [selectedItem, toggleSelectedItem] = useState(undefined);
     const ref = getFirebaseRef([...fireBaseRef, { type: 'collection', value: collection.toString() }])
     const [screenState, toggleScreenState] = useState('list') //list, add
+    const [isLoading, toggleIsLoading] = useState(true)
 
     useEffect(() => {
-        console.log("_______mount modal list", modalVisible)
+        helpers.print("_______mount modal list")
         updateExtraFieldsValues()
+        toggleIsLoading(true)
         const subcriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
             querySnapShot.forEach(doc => {
@@ -61,10 +64,11 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
                 })
             });
             setItems(listItems)
+            toggleIsLoading(false)
         })
 
         return function cleanup() {
-            console.log("_______unmount modal list")
+            helpers.print("_______unmount modal list")
             updateExtraFieldsValues("empty") // We update the extraFields obj with empty values
             subcriber()
         }
@@ -118,9 +122,10 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
 
 
     const renderListModal = () => {
+        if (items.length === 0) toggleModalVisible(false)
         return (
             <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
-                <Dialog.Title>Choose a {title}</Dialog.Title>
+                <Dialog.Title>{task}</Dialog.Title>
                 <Dialog.ScrollArea>
                     <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10, marginBottom: 10 }}>
                         {renderOptions()}
@@ -153,7 +158,8 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
                         toggleScreenState={toggleScreenState}
                         modalVisible={modalVisible}
                         toggleModalVisible={toggleModalVisible}
-                        title={title} />
+                        title={title}
+                        task={task} />
                 )
 
             default:
@@ -163,8 +169,15 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
     }
 
 
+    if (isLoading === true) return (<></>)
+
     return (
         <>
+            <Button onPress={() => {
+                toggleScreenState('add')
+                toggleModalVisible(true)
+            }
+            }>Add New {title}</Button>
             {(selectedItem !== '' && selectedItem !== undefined) && (
                 <FlexContainer direction="row" alignItems="center">
                     <Subheading>{title}: </Subheading>
@@ -179,7 +192,7 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
 }
 
 
-const AddNewOptions = ({ addFields, fireBaseRef, toggleScreenState, toggleModalVisible, modalVisible, title }) => {
+const AddNewOptions = ({ addFields, fireBaseRef, toggleScreenState, toggleModalVisible, modalVisible, title, task }) => {
 
     const [values, toggleValues] = useState({})
 
@@ -205,7 +218,7 @@ const AddNewOptions = ({ addFields, fireBaseRef, toggleScreenState, toggleModalV
     }
 
     const toggleValue = (value) => {
-        console.log(value)
+        // console.log(value)
         toggleValues({ ...values, ...value });
     }
 
@@ -248,7 +261,7 @@ const AddNewOptions = ({ addFields, fireBaseRef, toggleScreenState, toggleModalV
 
     return (
         <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
-            <Dialog.Title>Add a {title}</Dialog.Title>
+            <Dialog.Title>Add - {task}</Dialog.Title>
             <Dialog.ScrollArea>
                 <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10, marginBottom: 10 }}>
                     {renderIdField()}

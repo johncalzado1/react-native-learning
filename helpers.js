@@ -1,4 +1,11 @@
+import { configs } from './config'
+
 export const helpers = {
+    print: (...message) => {
+        if (configs.debug === true) {
+            console.log(...message)
+        }
+    },
     // takes in an array of objectsm searches each object for a value assigned to a specific key
     findValueInArrayOfObjs: (arr, val, key, debug = false) => {
         if (debug === true) console.log(arr, val, key)
