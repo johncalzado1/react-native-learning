@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Portal, Title, Button, Caption, Dialog, Text, Subheading } from 'react-native-paper'
+import { Portal, Title, Button, Caption, Dialog, Text, Subheading, TextInput } from 'react-native-paper'
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { TimeInputControl, FlexContainer, FlexItem } from '../../theme'
 import { theme_file } from '../../theme_file';
@@ -42,13 +42,13 @@ const getFirebaseRef = (fsRef = []) => {
         { type: 'document', value: "doc1234" }
     ]}
 */
-export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, toggleOutput }) => {
+export const ModalList = ({ type, title, name, keys, collection, add_fields, fireBaseRef, toggleOutput }) => {
 
     const [items, setItems] = useState([])
     const [selectedItem, toggleSelectedItem] = useState(undefined);
     const ref = getFirebaseRef([...fireBaseRef, { type: 'collection', value: collection.toString() }])
-    // const ref = firestore().collection(collection);
     const [modalVisible, toggleModalVisible] = useState(true)
+    const [screenState, toggleScreenState] = useState('list') //list, add
 
     useEffect(() => {
         updateExtraFieldsValues()
@@ -115,6 +115,51 @@ export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, to
         })
     }
 
+    const renderListModal = () => {
+        return (
+            <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
+                <Dialog.Title>Choose a {title}</Dialog.Title>
+                <Dialog.ScrollArea>
+                    <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10, marginBottom: 10 }}>
+                        {renderOptions()}
+                    </ScrollView>
+                </Dialog.ScrollArea>
+                <Dialog.Actions>
+                    <FlexContainer direction="row" justifyContent="flex-start">
+                        <FlexItem>
+                            <Button style={{ left: 0 }} onPress={() => toggleScreenState('add')}>Add New</Button>
+                        </FlexItem>
+                        <FlexItem>
+                            <Button style={{ marginRight: 10 }} onPress={() => toggleModalVisible(false)}>Ok</Button>
+                        </FlexItem>
+                    </FlexContainer>
+                </Dialog.Actions>
+            </Dialog>
+        )
+    }
+
+    const renderModal = () => {
+        switch (screenState) {
+            case 'list':
+                return (<>{renderListModal()}</>)
+                break;
+            case 'add':
+                return (
+                    <AddNewOptions
+                        addFields={add_fields}
+                        fireBaseRef={ref}
+                        toggleScreenState={toggleScreenState}
+                        modalVisible={modalVisible}
+                        toggleModalVisible={toggleModalVisible}
+                        title={title} />
+                )
+
+            default:
+                return (<>{renderListModal()}</>)
+                break;
+        }
+    }
+
 
     return (
         <>
@@ -125,18 +170,99 @@ export const ModalList = ({ type, title, name, keys, collection, fireBaseRef, to
                 </FlexContainer>
             )}
             <Portal>
-                <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
-                    <Dialog.Title>Choose a {title}</Dialog.Title>
-                    <Dialog.ScrollArea>
-                        <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10 }}>
-                            {renderOptions()}
-                        </ScrollView>
-                    </Dialog.ScrollArea>
-                    <Dialog.Actions>
-                        <Button style={{ marginRight: 10 }} onPress={() => toggleModalVisible(false)}>Ok</Button>
-                    </Dialog.Actions>
-                </Dialog>
+                {renderModal()}
             </Portal>
         </>
+    )
+}
+
+
+const AddNewOptions = ({ addFields, fireBaseRef, toggleScreenState, toggleModalVisible, modalVisible, title }) => {
+
+    const [values, toggleValues] = useState({})
+
+    const addToFireStore = () => {
+        if ('id' in values && values['id'] !== undefined) {
+            console.log("HAD ID", values.id)
+            return fireBaseRef
+                .doc(values.id)
+                .set(values)
+                .then(() => {
+                    alert("Added")
+                    toggleScreenState('list')
+                })
+        } else {
+            console.log("NO ID")
+            return fireBaseRef
+                .add(values)
+                .then(() => {
+                    alert("Added")
+                    toggleScreenState('list')
+                })
+        }
+    }
+
+    const toggleValue = (value) => {
+        console.log(value)
+        toggleValues({ ...values, ...value });
+    }
+
+    const renderedFields = () => addFields.map((item, index) => {
+        return (
+            <View key={index}>
+                <Caption>{item.key}</Caption>
+                <TextInput
+                    value={values[item.key]}
+                    dense
+                    style={{ minWidth: '100%' }}
+                    onChangeText={text => toggleValue({ [item.key]: text })}
+                />
+            </View>
+        )
+    })
+
+    const validatIdField = (value) => {
+        let _value = value.toLowerCase()
+        _value = _value.replace(" ", "_")
+        return _value;
+    }
+
+    const renderIdField = () => {
+        return (
+            <View key="id-optional">
+                <Caption>id (optional)</Caption>
+                <TextInput
+                    value={values['id']}
+                    dense
+                    style={{ minWidth: '100%' }}
+                    onChangeText={text => toggleValue({ ['id']: validatIdField(text) })}
+                    autoCapitalize="none"
+                />
+            </View>
+        )
+    }
+
+    if (!addFields) return (<Text>No Add Fields</Text>);
+
+    return (
+        <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
+            <Dialog.Title>Add a {title}</Dialog.Title>
+            <Dialog.ScrollArea>
+                <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10, marginBottom: 10 }}>
+                    {renderIdField()}
+                    {renderedFields()}
+                </ScrollView>
+            </Dialog.ScrollArea>
+            <Dialog.Actions>
+                <FlexContainer direction="row" justifyContent="flex-start">
+                    <FlexItem>
+                        <Button style={{ left: 0 }} onPress={() => toggleScreenState('list')}>Back</Button>
+                    </FlexItem>
+                    <FlexItem>
+                        <Button style={{ marginRight: 10 }} onPress={() => addToFireStore()}>Add</Button>
+                    </FlexItem>
+                </FlexContainer>
+            </Dialog.Actions>
+        </Dialog>
     )
 }

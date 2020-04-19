@@ -134,7 +134,7 @@ const CategorySection = ({ values, toggleValues }) => {
                                 key={index} {...field}></RnFirebaseMultiSelectList>
                         )
                         break;
-                    case 'modal_list':
+                    case 'modal_list_with_add':
                         return (
                             <ModalList
                                 toggleOutput={extraFieldsToggler}
