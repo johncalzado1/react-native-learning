@@ -44,7 +44,7 @@ const CategorySection = ({ values, toggleValues }) => {
     const [taskTypes, setTaskTypes] = useState([])
     const [loading, setLoading] = useState(true);
 
-    const [modalVisible, toggleModalVisible] = useState(false)
+    const [modalVisible, toggleModalVisible] = useState(true)
 
     const ref = firestore().collection(configs.taskCollection);
 
@@ -127,10 +127,52 @@ const CategorySection = ({ values, toggleValues }) => {
             _val = task
         } else {
             _val = helpers.findValueInArrayOfObjs(taskTypes, task, 'id')
-            console.log(_val)
+            // console.log(_val)
             _val = _val['title']
         }
         return _val
+    }
+
+    const renderTaskExtraFields = () => {
+        const taskObj = getSelectedTaskObj()
+        if (taskObj === false) return
+        if ('fields' in taskObj) {
+            const taskExtraFields = taskObj['fields']
+            if (!taskExtraFields) return
+            const extraFields = taskExtraFields.map((field, index) => {
+                const { type } = field
+                // console.log("TYPE", type, field)
+                switch (type) {
+                    case 'fs_multi_select_list_with_search':
+                        return (
+                            <RnFirebaseMultiSelectList
+                                toggleModalVisible={toggleModalVisible}
+                                modalVisible={modalVisible}
+                                toggleOutput={extraFieldsToggler}
+                                key={index} {...field}></RnFirebaseMultiSelectList>
+                        )
+                        break;
+                    case 'modal_list_with_add':
+                        return (
+                            <ModalList
+                                toggleModalVisible={toggleModalVisible}
+                                modalVisible={modalVisible}
+                                task={getTaskTitle()}
+                                toggleOutput={extraFieldsToggler}
+                                key={index}
+                                fireBaseRef={[
+                                    { type: 'collection', value: configs.taskCollection },
+                                    { type: 'document', value: taskObj.id }
+                                ]}
+                                {...field}></ModalList>
+                        );
+                        break;
+                }
+            });
+            return (<>{extraFields}</>)
+        } else {
+            return (<Title>NO FIELDS</Title>)
+        }
     }
 
     return (
@@ -139,11 +181,12 @@ const CategorySection = ({ values, toggleValues }) => {
             <View style={styles.buttonContainer}>
                 {renderOptions()}
             </View>
-            <ExtraFields
+            {renderTaskExtraFields()}
+            {/* <ExtraFields
                 extraFieldsToggler={extraFieldsToggler}
                 taskObj={getSelectedTaskObj()}
                 visible={true}
-                task={getTaskTitle()}></ExtraFields>
+                task={getTaskTitle()}></ExtraFields> */}
         </View >
     )
 }
@@ -160,7 +203,7 @@ const ExtraFields = ({ taskObj, extraFieldsToggler, task }) => {
         return function cleanup() {
             helpers.print("___unmount extra")
         }
-    }, [taskObj])
+    }, [taskObj, task])
     const renderTaskExtraFields = () => {
         if (taskObj === false) return
         if ('fields' in taskObj) {

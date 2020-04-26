@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Portal, Title, Button, Caption, Dialog, Text, Subheading, TextInput } from 'react-native-paper'
+import { Portal, Title, Button, Caption, Dialog, Text, Subheading, TextInput, ActivityIndicator } from 'react-native-paper'
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { TimeInputControl, FlexContainer, FlexItem } from '../../theme'
 import { theme_file } from '../../theme_file';
@@ -52,9 +52,10 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
     const [isLoading, toggleIsLoading] = useState(true)
 
     useEffect(() => {
-        helpers.print("_______mount modal list")
+        helpers.print("_______mount modal list", task)
         updateExtraFieldsValues()
         toggleIsLoading(true)
+        console.log("loading...")
         const subcriber = ref.onSnapshot(querySnapShot => {
             const listItems = []
             querySnapShot.forEach(doc => {
@@ -65,14 +66,25 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
             });
             setItems(listItems)
             toggleIsLoading(false)
+            toggleModalVisible(true)
+            console.log("loaded!!", listItems)
         })
 
         return function cleanup() {
             helpers.print("_______unmount modal list")
             updateExtraFieldsValues("empty") // We update the extraFields obj with empty values
             subcriber()
+            cleanUpFunction()
         }
-    }, [selectedItem, task])
+    }, [task])
+
+    const cleanUpFunction = () => {
+        toggleSelectedItem(undefined)
+        toggleModalVisible(false)
+        toggleScreenState('list')
+        setItems([])
+        toggleIsLoading(false)
+    }
 
     /* 
         Update extra fields based on selectedItems or input value
@@ -86,6 +98,13 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
         toggleOutput({ [name]: (!_value) ? undefined : _value })
     }
 
+    // const toggleIfModalVisible = () => {
+    //     if (items.length > 0) {
+    //         toggleModalVisible(true)
+    //     } else {
+    //         toggleModalVisible(false)
+    //     }
+    // }
 
     // gets which keys to grab from items via the keys props
     const getItemValueBasedOnKeys = (itemId) => {
@@ -94,15 +113,25 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
 
         let _selectedItemId = (!itemId) ? selectedItem : itemId
         const itemObj = items.find(item => item.id === _selectedItemId)
+        if (!itemObj || !_selectedItemId) {
+            // console.log("NO ITEMMMMM");
+            return
+        }
+        // console.log("KEYS", itemObj, _selectedItemId, itemId, key)
         return itemObj[key]
     }
 
     const selectItem = (itemName) => {
+        console.log("SELECTING", itemName)
         toggleSelectedItem(itemName)
     }
 
+    const unselectItem = () => {
+        toggleSelectedItem(undefined)
+    }
+
     const renderOptions = () => {
-        if (items.length < 0) return (<Text>No {title}s</Text>)
+        if (items.length === 0) return (<Text>No {title}s</Text>)
 
         return items.map((option, i) => {
             return (
@@ -122,12 +151,15 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
 
 
     const renderListModal = () => {
+        console.log("LOADING:", isLoading, "ITEMS:", items)
         return (
             <Dialog visible={modalVisible} onDismiss={() => toggleModalVisible(false)}>
                 <Dialog.Title>{task}</Dialog.Title>
                 <Dialog.ScrollArea>
                     <ScrollView contentContainerStyle={{ ...styles.buttonContainer, marginTop: 10, marginBottom: 10 }}>
-                        {renderOptions()}
+                        {(isLoading === true) ?
+                            (<ActivityIndicator animating={true} />) :
+                            renderOptions()}
                     </ScrollView>
                 </Dialog.ScrollArea>
                 <Dialog.Actions>
@@ -167,16 +199,16 @@ export const ModalList = ({ type, title, name, keys, collection, add_fields, fir
         }
     }
 
+    console.log("selectedITEM", selectedItem)
 
-    if (isLoading === true || items.length === 0) return (<></>)
     return (
         <>
-            {(selectedItem !== '' && selectedItem !== undefined) && (
+            {(selectedItem !== '' && selectedItem !== undefined) ? (
                 <FlexContainer direction="row" alignItems="center">
                     <Subheading>{title}: </Subheading>
                     <Button mode="contained" uppercase={false} compact>{getItemValueBasedOnKeys()}</Button>
                 </FlexContainer>
-            )}
+            ) : (<></>)}
             <Button onPress={() => {
                 toggleScreenState('add')
                 toggleModalVisible(true)
